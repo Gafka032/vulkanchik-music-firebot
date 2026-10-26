@@ -53,7 +53,9 @@ export function makeEffect(opts: {
       ],
     },
     optionsTemplate: opts.template,
-    optionsValidator: (effect) => (opts.validate ? opts.validate(effect as Record<string, unknown>) : []),
+    // Firebot serializes this via .toString() and eval()s it in the renderer.
+    // Must be a self-contained function (no closures over str/opts/module helpers).
+    optionsValidator: (opts.validate ?? (() => [])) as EffectType["optionsValidator"],
     onTriggerEvent: async (event) => {
       try {
         const api = apiFromParams();

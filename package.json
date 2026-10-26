@@ -1,6 +1,6 @@
 {
   "name": "@vulkanchik/firebot-music-plugin",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "private": false,
   "description": "Firebot plugin for Vulkanchik Music API (full /api/music/v1 coverage)",
   "license": "MIT",
@@ -15,7 +15,7 @@
   "main": "dist/vulkanchik-music.js",
   "vulkanchik": {
     "minFirebot": "5.67.0",
-    "releaseNotesUk": "Toggle Play/Pause; таймаут API 10 с — зламаний/завислий ефект більше не зупиняє наступні в списку."
+    "releaseNotesUk": "Виправлено додавання ефектів у Firebot (валідатор більше не ламає збереження)."
   },
   "scripts": {
     "build": "node scripts/build.mjs",

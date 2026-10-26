@@ -41,9 +41,10 @@ export function buildAllEffects(): EffectType[] {
         }) +
         checkbox("postReply", "Also let Vulkanchik bot post replies (postReply)"),
       validate: (e) => {
-        const errs: string[] = [];
-        if (!str(e.message)) errs.push("Message is required");
-        if (!str(e.chatterTwitchId)) errs.push("Chatter Twitch user id is required");
+        // self-contained for Firebot UI eval (no module helpers)
+        const errs = [];
+        if (!String(e.message ?? "").trim()) errs.push("Message is required");
+        if (!String(e.chatterTwitchId ?? "").trim()) errs.push("Chatter Twitch user id is required");
         return errs;
       },
       run: async ({ effect, api }) => {
@@ -87,7 +88,7 @@ export function buildAllEffects(): EffectType[] {
       name: "Enqueue (streamer)",
       description: "POST /queue — add track as streamer",
       template: field("query", "Query / URL", { placeholder: "Artist — Title or YouTube URL" }),
-      validate: (e) => (!str(e.query) ? ["Query is required"] : []),
+      validate: (e) => (!String(e.query ?? "").trim() ? ["Query is required"] : []),
       run: async ({ effect, api }) => {
         const res = await api.postQueue(str(effect.query));
         rememberSnapshot((res as { snapshot?: unknown }).snapshot);
@@ -103,9 +104,9 @@ export function buildAllEffects(): EffectType[] {
         field("requesterName", "Requester name") +
         field("requesterTwitchId", "Requester Twitch id (optional)"),
       validate: (e) => {
-        const errs: string[] = [];
-        if (!str(e.query)) errs.push("Query is required");
-        if (!str(e.requesterName)) errs.push("Requester name is required");
+        const errs = [];
+        if (!String(e.query ?? "").trim()) errs.push("Query is required");
+        if (!String(e.requesterName ?? "").trim()) errs.push("Requester name is required");
         return errs;
       },
       run: async ({ effect, api }) => {
@@ -124,7 +125,7 @@ export function buildAllEffects(): EffectType[] {
       name: "Remove queue item",
       description: "DELETE /queue/:id",
       template: field("itemId", "Queue item id"),
-      validate: (e) => (!str(e.itemId) ? ["Item id is required"] : []),
+      validate: (e) => (!String(e.itemId ?? "").trim() ? ["Item id is required"] : []),
       run: async ({ effect, api }) => {
         const res = await api.deleteQueueItem(str(effect.itemId));
         rememberSnapshot(res);
@@ -136,7 +137,14 @@ export function buildAllEffects(): EffectType[] {
       name: "Reorder queue",
       description: "PATCH /queue/reorder",
       template: field("orderedIds", "Ordered ids (comma or space separated)", { textarea: true }),
-      validate: (e) => (parseIds(e.orderedIds).length === 0 ? ["At least one id"] : []),
+      validate: (e) => {
+        const ids = String(e.orderedIds ?? "")
+          .trim()
+          .split(/[\s,]+/)
+          .map((x) => x.trim())
+          .filter(Boolean);
+        return ids.length === 0 ? ["At least one id"] : [];
+      },
       run: async ({ effect, api }) => {
         const res = await api.reorderQueue(parseIds(effect.orderedIds));
         rememberSnapshot(res);
@@ -216,7 +224,7 @@ export function buildAllEffects(): EffectType[] {
       template: field("volume", "Volume 0–100", { type: "number", placeholder: "50" }),
       validate: (e) => {
         const n = Number(e.volume);
-        if (!Number.isFinite(n) || n < 0 || n > 100) return ["Volume must be 0–100"];
+        if (!Number.isFinite(n) || n < 0 || n > 100) return ["Volume must be 0-100"];
         return [];
       },
       run: async ({ effect, api }) => {
@@ -246,7 +254,7 @@ export function buildAllEffects(): EffectType[] {
       name: "Claim leader",
       description: "POST /leader",
       template: field("sessionId", "Player session id"),
-      validate: (e) => (!str(e.sessionId) ? ["sessionId required"] : []),
+      validate: (e) => (!String(e.sessionId ?? "").trim() ? ["sessionId required"] : []),
       run: async ({ effect, api }) => {
         const res = await api.leader(str(effect.sessionId));
         return { outputs: { apiResponse: JSON.stringify(res) } };
@@ -275,11 +283,13 @@ export function buildAllEffects(): EffectType[] {
         placeholder: '{"chatCommandsVia":"external"}',
       }),
       validate: (e) => {
+        const s = String(e.patchJson ?? "").trim();
+        if (!s) return ["Patch JSON is required"];
         try {
-          parseJsonField(e.patchJson, "Patch");
+          JSON.parse(s);
           return [];
-        } catch (err) {
-          return [err instanceof Error ? err.message : "Invalid JSON"];
+        } catch {
+          return ["Patch must be valid JSON"];
         }
       },
       run: async ({ effect, api }) => {
@@ -294,7 +304,7 @@ export function buildAllEffects(): EffectType[] {
       description: "Shortcut: vulkanchik | external",
       template: field("via", "Mode", { placeholder: "external" }),
       validate: (e) => {
-        const v = str(e.via);
+        const v = String(e.via ?? "").trim();
         if (v !== "external" && v !== "vulkanchik") return ["Must be external or vulkanchik"];
         return [];
       },
@@ -369,7 +379,7 @@ export function buildAllEffects(): EffectType[] {
       template:
         field("playlistUrl", "Playlist / album / track URL") +
         field("mode", "Mode", { placeholder: "merge" }),
-      validate: (e) => (!str(e.playlistUrl) ? ["playlistUrl required"] : []),
+      validate: (e) => (!String(e.playlistUrl ?? "").trim() ? ["playlistUrl required"] : []),
       run: async ({ effect, api }) => {
         const body: { playlistUrl: string; mode?: string } = {
           playlistUrl: str(effect.playlistUrl),
@@ -412,7 +422,7 @@ export function buildAllEffects(): EffectType[] {
         field("rewardTitle", "Title (optional)") +
         field("minRole", "minRole", { placeholder: "everyone" }) +
         checkbox("autoRefundPoints", "Auto-refund points"),
-      validate: (e) => (!str(e.rewardId) ? ["rewardId required"] : []),
+      validate: (e) => (!String(e.rewardId ?? "").trim() ? ["rewardId required"] : []),
       run: async ({ effect, api }) => {
         const body: Record<string, unknown> = {
           rewardId: str(effect.rewardId),
@@ -433,7 +443,7 @@ export function buildAllEffects(): EffectType[] {
         field("rewardTitle", "Title (optional)") +
         field("minRole", "minRole (optional)") +
         field("autoRefundPoints", "autoRefundPoints true/false (optional)"),
-      validate: (e) => (!str(e.mappingId) ? ["mappingId required"] : []),
+      validate: (e) => (!String(e.mappingId ?? "").trim() ? ["mappingId required"] : []),
       run: async ({ effect, api }) => {
         const body: Record<string, unknown> = {};
         if (str(effect.rewardTitle)) body.rewardTitle = str(effect.rewardTitle);
@@ -449,7 +459,7 @@ export function buildAllEffects(): EffectType[] {
       name: "Delete points mapping",
       description: "DELETE /points/rewards/:id",
       template: field("mappingId", "Mapping id (cuid)"),
-      validate: (e) => (!str(e.mappingId) ? ["mappingId required"] : []),
+      validate: (e) => (!String(e.mappingId ?? "").trim() ? ["mappingId required"] : []),
       run: async ({ effect, api }) => {
         const res = await api.deletePointsReward(str(effect.mappingId));
         return { outputs: { apiResponse: JSON.stringify(res) } };
@@ -483,11 +493,13 @@ export function buildAllEffects(): EffectType[] {
         placeholder: '{"custom":[],"assignments":[]}',
       }),
       validate: (e) => {
+        const s = String(e.rolesJson ?? "").trim();
+        if (!s) return ["Roles JSON is required"];
         try {
-          parseJsonField(e.rolesJson, "Roles");
+          JSON.parse(s);
           return [];
-        } catch (err) {
-          return [err instanceof Error ? err.message : "Invalid JSON"];
+        } catch {
+          return ["Roles must be valid JSON"];
         }
       },
       run: async ({ effect, api }) => {
