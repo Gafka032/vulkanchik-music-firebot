@@ -1,0 +1,32 @@
+{
+  "name": "@vulkanchik/firebot-music-plugin",
+  "version": "1.0.2",
+  "private": false,
+  "description": "Firebot plugin for Vulkanchik Music API (full /api/music/v1 coverage)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Gafka032/vulkanchik-music-firebot.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Gafka032/vulkanchik-music-firebot/issues"
+  },
+  "homepage": "https://github.com/Gafka032/vulkanchik-music-firebot#readme",
+  "main": "dist/vulkanchik-music.js",
+  "vulkanchik": {
+    "minFirebot": "5.67.0",
+    "releaseNotesUk": "Toggle Play/Pause; таймаут API 10 с — зламаний/завислий ефект більше не зупиняє наступні в списку."
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node --test test/api.test.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.0",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.8.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
